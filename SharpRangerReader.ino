@@ -5,9 +5,13 @@ Author: Marcus Ahlberg (marcus[at]aahlborg.se)
 
 #include <Wire.h>
 
-#define ADDRESS        (0x80 >> 1) // 7 highest bits
-#define DISTANCE_ADDR  0x5E
-#define SHIFT_ADDR     0x35
+#define ADDRESS         (0x80 >> 1) // 7 highest bits
+
+#define SHIFT_ADDR      0x35
+#define DISTANCE_ADDR   0x5E
+#define RIGHT_EDGE_ADDR 0xF8 // C
+#define LEFT_EDGE_ADDR  0xF9 // A
+#define PEAK_EDGE_ADDR  0xFA // B
 
 uint8_t distance_raw[2] = {0};
 uint8_t shift = 0;
@@ -39,6 +43,7 @@ void setup()
 
 void loop()
 {
+  // Read basic measurement
   Wire.beginTransmission(ADDRESS);
   Wire.write(byte(DISTANCE_ADDR));
   Wire.endTransmission();
@@ -53,6 +58,32 @@ void loop()
     // Print distance in cm
     distance_cm = (distance_raw[0] * 16 + distance_raw[1]) / 16 / (int)pow(2, shift);
     sprintf(buf, "Distance %u cm", distance_cm);
+    Serial.println(buf);
+  }
+  else
+  {
+    Serial.println("Read error");
+  }
+
+  // Read A-B-C data
+  Wire.beginTransmission(ADDRESS);
+  Wire.write(byte(RIGHT_EDGE_ADDR));
+  Wire.endTransmission();
+
+  Wire.requestFrom(ADDRESS, 3);
+
+  if (3 <= Wire.available())
+  {
+    uint8_t c = Wire.read();
+    uint8_t a = Wire.read();
+    uint8_t b = Wire.read();
+    uint8_t spotSize = c - a;
+    uint8_t spotSym = abs((c - a) - 2 * b);
+
+    // Print info
+    sprintf(buf, "A: %u, B: %u, C: %u", a, b, c);
+    Serial.println(buf);
+    sprintf(buf, "Size: %u, Symmetry: %u", spotSize, spotSym);
     Serial.println(buf);
   }
   else
