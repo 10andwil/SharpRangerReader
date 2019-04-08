@@ -13,9 +13,9 @@ Author: Marcus Ahlberg (marcus[at]aahlborg.se)
 #define LEFT_EDGE_ADDR  0xF9 // A
 #define PEAK_EDGE_ADDR  0xFA // B
 
-uint8_t distance_raw[2] = {0};
+float distance_raw[2] = {0};
 uint8_t shift = 0;
-uint8_t distance_cm = 0;
+float distance_cm = 0;
 char buf[100];
 
 void setup()
@@ -57,8 +57,8 @@ void loop()
 
     // Print distance in cm
     distance_cm = (distance_raw[0] * 16 + distance_raw[1]) / 16 / (int)pow(2, shift);
-    sprintf(buf, "Distance %u cm", distance_cm);
-    Serial.println(buf);
+    dtostrf(distance_cm, 10, 2, buf);
+    Serial.print("Distance: "); Serial.print(buf); Serial.println(" cm");
   }
   else
   {
